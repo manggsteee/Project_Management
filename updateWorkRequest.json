@@ -1,0 +1,9 @@
+{
+    "title": "Update Task",
+    "description": "This is a description of the update task.",
+    "status": "IN_PROGRESS",
+    "startDate": "2024-10-01T00:00:00",
+    "endDate": "2024-12-31T00:00:00",
+    "priority": "HIGH",
+    "memberName": "andrew"
+}
