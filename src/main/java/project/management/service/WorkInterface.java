@@ -12,4 +12,6 @@ public interface WorkInterface {
     WorkDTO updateWork(Long workId, WorkRequest request, List<MultipartFile> files);
 
     void deleteWork(Long workId);
+
+    void submitWork(Long id, List<MultipartFile> files);
 }

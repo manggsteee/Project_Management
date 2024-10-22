@@ -11,6 +11,7 @@ import project.management.model.Task;
 import project.management.model.User;
 import project.management.model.Work;
 import project.management.model.attachment.WorkAttachment;
+import project.management.project_enum.ProjectType;
 import project.management.repository.TaskRepository;
 import project.management.repository.WorkRepository;
 import project.management.request.WorkRequest;
@@ -18,6 +19,8 @@ import project.management.request.WorkRequest;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+
+import static project.management.project_enum.ProjectType.work_submit;
 
 
 @Service
@@ -49,7 +52,7 @@ public class WorkService implements WorkInterface {
         User user = getMember(request.getMemberName(), work.getTask());
         if (user != null)
             work.setUser(user);
-        work.setWorkAttachments(attachmentService.addAttachments(files, work.getId(), "work", work));
+        work.setWorkAttachments(attachmentService.addAttachments(files, work.getId(), ProjectType.work, work));
         workRepository.save(work);
         log.info("Attachments had saved into Work with id {}", work.getId());
         return getWorkDTO(work);
@@ -66,11 +69,7 @@ public class WorkService implements WorkInterface {
                             foundWork.setStartDate(request.getStartDate());
                             foundWork.setEndDate(request.getEndDate());
                             foundWork.setPriority(request.getPriority());
-                            List<WorkAttachment> newTaskAttachments = attachmentService.addAttachments(
-                                    files, foundWork.getId(), "work", foundWork);
-                            List<WorkAttachment> existingAttachments = foundWork.getWorkAttachments();
-                            existingAttachments.clear();
-                            existingAttachments.addAll(newTaskAttachments);
+                            addNewAttachments(files, foundWork, ProjectType.work);
                             User user = getMember(request.getMemberName(), foundWork.getTask());
                             if (user != null)
                                 foundWork.setUser(user);
@@ -78,6 +77,14 @@ public class WorkService implements WorkInterface {
                         })
                         .orElseThrow(() -> new ResourceNotFoundException("Work not found"))
         );
+    }
+
+    private void addNewAttachments(List<MultipartFile> files, Work foundWork, ProjectType type) {
+        List<WorkAttachment> newTaskAttachments = attachmentService.addAttachments(
+                files, foundWork.getId(), type, foundWork);
+        List<WorkAttachment> existingAttachments = foundWork.getWorkAttachments();
+        existingAttachments.clear();
+        existingAttachments.addAll(newTaskAttachments);
     }
 
     @Override
@@ -95,6 +102,13 @@ public class WorkService implements WorkInterface {
                 () -> {
                     throw new ResourceNotFoundException("Work not found");
                 });
+    }
+
+    @Override
+    public void submitWork(Long id,List<MultipartFile> files) {
+        Work work = workRepository.getWorkById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Work not found"));
+        addNewAttachments(files, work, work_submit);
     }
 
     private WorkDTO getWorkDTO(Work work) {

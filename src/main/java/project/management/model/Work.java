@@ -3,6 +3,7 @@ package project.management.model;
 import jakarta.persistence.*;
 import lombok.*;
 import project.management.model.attachment.WorkAttachment;
+import project.management.model.attachment.WorkSubmitAttachment;
 import project.management.model.comment.WorkComment;
 import project.management.project_enum.ProjectPriority;
 import project.management.project_enum.ProjectStatus;
@@ -17,7 +18,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "projectWork")
-public class Work {
+public class Work{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,6 +44,8 @@ public class Work {
     private ProjectPriority priority;
     @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkAttachment> workAttachments;
+    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkSubmitAttachment> workSubmitAttachments;
     @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkComment> workComments;
     @PrePersist

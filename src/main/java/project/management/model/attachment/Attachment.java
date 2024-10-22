@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-@Slf4j
 public abstract class Attachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

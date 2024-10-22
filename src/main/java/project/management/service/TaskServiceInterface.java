@@ -15,4 +15,6 @@ public interface TaskServiceInterface {
     TaskDTO updateTask(Long taskId, TaskRequest updateTaskRequest, List<MultipartFile> files);
 
     void deleteTask(Long taskId);
+
+    //List<TaskDTO> getTasksByProjectId(Long projectId);
 }

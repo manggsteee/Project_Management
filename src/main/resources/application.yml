@@ -19,5 +19,5 @@ api:
   prefix: "/project_management/v1"
 
 file:
-  upload-dir: "D:\\Documents\\IdeaProjects\\Project_Management\\Folder_Storage\\"
+  upload-dir: "D:\\Documents\\Folder_Storage\\"
 

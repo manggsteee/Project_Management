@@ -26,7 +26,7 @@ public class TaskController {
     public ResponseEntity<ApiResponse> createTask(
             @PathVariable Long projectId,
             @RequestPart("task_informations") TaskRequest request,
-            @RequestParam(value = "description_files",
+            @RequestPart(value = "description_files",
                     required = false) List<MultipartFile> files) {
         try {
             return ResponseEntity.ok(new ApiResponse("Create Task Successfully",

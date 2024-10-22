@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "project_task")
-public class Task {
+public class Task{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

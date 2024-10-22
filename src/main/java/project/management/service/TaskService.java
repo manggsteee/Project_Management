@@ -11,6 +11,7 @@ import project.management.model.Project;
 import project.management.model.Task;
 import project.management.model.User;
 import project.management.model.attachment.TaskAttachment;
+import project.management.project_enum.ProjectType;
 import project.management.repository.ProjectRepository;
 import project.management.repository.TaskRepository;
 import project.management.repository.UserRepository;
@@ -54,7 +55,7 @@ public class TaskService implements TaskServiceInterface {
                 }
         );
         log.info("Task created with id {}", task.getId());
-        task.setTaskAttachments(attachmentService.addAttachments(files, task.getId(), "task", task));
+        task.setTaskAttachments(attachmentService.addAttachments(files, task.getId(), ProjectType.task, task));
         taskRepository.save(task);
         log.info("Attachments had saved into Task with id {}", task.getId());
         return getTaskDTO(task, getNotAddedMembers(request.getUserNames(), task));
@@ -71,7 +72,7 @@ public class TaskService implements TaskServiceInterface {
                     foundTask.setEndDate(updateTaskRequest.getEndDate());
                     foundTask.setPriority(updateTaskRequest.getPriority());
                     List<TaskAttachment> newTaskAttachments = attachmentService.addAttachments(
-                            files, foundTask.getId(), "task", foundTask);
+                            files, foundTask.getId(), ProjectType.task, foundTask);
                     List<TaskAttachment> existingAttachments = foundTask.getTaskAttachments();
                     existingAttachments.clear();
                     existingAttachments.addAll(newTaskAttachments);
