@@ -4,19 +4,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import project.management.dto.AttachmentDTO;
-import project.management.dto.MemberRoleDTO;
-import project.management.dto.ProjectDTO;
-import project.management.exception.ResourceNotFoundException;
+import project.management.dto.response.AttachmentDTO;
+import project.management.dto.response.MemberRoleDTO;
+import project.management.dto.response.ProjectDTO;
+import project.management.exception.ApplicationException;
 import project.management.model.MemberRole;
 import project.management.model.Project;
 import project.management.model.attachment.ProjectAttachment;
+import project.management.project_enum.ExceptionEnum;
+import project.management.project_enum.ProjectStatus;
+import project.management.project_enum.ProjectType;
 import project.management.repository.ProjectRepository;
 import project.management.repository.UserRepository;
-import project.management.request.ProjectRequest;
-import project.management.request.MemberRolesRequest;
+import project.management.repository.attachment.ProjectAttachmentRepository;
+import project.management.dto.request.MemberRolesRequest;
+import project.management.dto.request.ProjectRequest;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +35,7 @@ public class ProjectService implements ProjectServiceInterface {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final AttachmentService attachmentService;
+    private final ProjectAttachmentRepository projectAttachmentRepository;
 
     @Override
     public ProjectDTO createProject(ProjectRequest request,
@@ -45,7 +51,7 @@ public class ProjectService implements ProjectServiceInterface {
         );
         log.info("Project created with ID: {}", project.getId());
         project.setProjectAttachments(attachmentService
-                .addAttachments(files, project.getId(), "project", project));
+                .addAttachments(files, project.getId(), ProjectType.project, project));
         project.setMemberRoles(getMemberRoles(project.getId(), request.getMemberRoles()));
         projectRepository.save(project);
         return getProjectDTO(project);
@@ -60,7 +66,7 @@ public class ProjectService implements ProjectServiceInterface {
             foundProject.setEndDate(request.getEndDate());
             foundProject.setStatus(request.getStatus());
             List<ProjectAttachment> newAttachments = attachmentService.addAttachments(
-                    files, foundProject.getId(), "project", foundProject);
+                    files, foundProject.getId(), ProjectType.project, foundProject);
             List<ProjectAttachment> existingAttachments = foundProject.getProjectAttachments();
             existingAttachments.clear();
             existingAttachments.addAll(newAttachments);
@@ -69,7 +75,7 @@ public class ProjectService implements ProjectServiceInterface {
             existingRoles.clear();
             existingRoles.addAll(newRoles);
             return projectRepository.save(foundProject);
-        }).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        }).orElseThrow(() -> new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND));
 
         return getProjectDTO(project);
     }
@@ -112,8 +118,93 @@ public class ProjectService implements ProjectServiceInterface {
                             });
                         },
                         () -> {
-                            throw new ResourceNotFoundException("Project not found");
+                            throw new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND);
                         });
+    }
+
+    @Override
+    public ProjectDTO getProjectById(String userName, Long projectId) {
+        Project project = projectRepository.findById(projectId).
+                orElseThrow(() -> new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND));
+        if (!checkExistUser(userName, project))
+            throw new ApplicationException(ExceptionEnum.DENIED_USER_FOUND_PROJECT);
+        return getProjectDTO(project);
+    }
+
+    @Override
+    public List<ProjectDTO> getProjectsByName(String userName, String projectName) {
+        List<Project> projects = getProjectsIfUserExists(userName,
+                projectRepository.getProjectByName(projectName)
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
+        if (projects.isEmpty())
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
+        return getProjectDTOs(projects);
+    }
+
+    @Override
+    public List<ProjectDTO> getProjectsByStartDate(String userName, LocalDateTime startDate) {
+        List<Project> projects = getProjectsIfUserExists(userName,
+                projectRepository.getProjectByStartDate(startDate)
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
+        if (projects.isEmpty())
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
+        return getProjectDTOs(projects);
+    }
+
+    @Override
+    public List<ProjectDTO> getProjectsByEndDate(String userName, LocalDateTime endDate) {
+        List<Project> projects = getProjectsIfUserExists(userName,
+                projectRepository.getProjectByEndDate(endDate)
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
+        if (projects.isEmpty())
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
+        return getProjectDTOs(projects);
+    }
+
+    @Override
+    public List<ProjectDTO> getProjectsByStatus(String userName, ProjectStatus status) {
+        List<Project> projects = getProjectsIfUserExists(userName,
+                projectRepository.getProjectByStatus(status)
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
+        if (projects.isEmpty())
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
+        return getProjectDTOs(projects);
+    }
+
+    @Override
+    public List<ProjectDTO> getProjectsByCreatedDate(String userName, LocalDateTime createdDate) {
+        List<Project> projects = getProjectsIfUserExists(userName,
+                projectRepository.getProjectByCreatedAt(createdDate)
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
+        if (projects.isEmpty())
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
+        return getProjectDTOs(projects);
+    }
+
+    @Override
+    public List<String> getProjectAttachments(Long projectId) {
+        return projectRepository.findById(projectId)
+                .map(project -> project.getProjectAttachments().stream()
+                        .map(projectAttachment ->
+                                "http://localhost:8080/project_management/v1/project/attachment/download/" + projectAttachment.getId()
+                                ).toList())
+                .orElseThrow(() -> new ApplicationException(ExceptionEnum.FILE_NOT_FOUND));
+    }
+
+    @Override
+    public ProjectAttachment getFilePath(Long attachmentId) {
+        return projectAttachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new ApplicationException(ExceptionEnum.FILE_NOT_FOUND));
     }
 
     private List<MemberRole> getMemberRoles(Long projectId, List<MemberRolesRequest> request) {
@@ -139,6 +230,10 @@ public class ProjectService implements ProjectServiceInterface {
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList())
                 : new ArrayList<>();
+    }
+
+    private List<ProjectDTO> getProjectDTOs(List<Project> projects) {
+        return projects.stream().map(this::getProjectDTO).collect(Collectors.toList());
     }
 
     private ProjectDTO getProjectDTO(Project project) {
@@ -170,5 +265,16 @@ public class ProjectService implements ProjectServiceInterface {
                                 .toList()
                 )
                 .build();
+    }
+
+    private boolean checkExistUser(String username, Project project) {
+        return Optional.ofNullable(project.getMemberRoles()).map(
+                        memberRoles -> memberRoles.stream().anyMatch(
+                                memberRole -> memberRole.getUser().getUsername().equals(username)))
+                .orElse(false);
+    }
+
+    private List<Project> getProjectsIfUserExists(String userName, List<Project> projects) {
+        return projects.stream().filter(project -> checkExistUser(userName, project)).toList();
     }
 }

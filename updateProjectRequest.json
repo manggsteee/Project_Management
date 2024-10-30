@@ -1,11 +1,11 @@
 {
-    "projectName": "Update Project",
-    "projectDescription": "This is a description of the update project.",
+    "title": "Update Project",
+    "description": "This is a description of the update project.",
     "startDate": "2024-10-01T00:00:00",
     "endDate": "2024-12-31T00:00:00",
-    "projectStatus": "IN_PROGRESS",
+    "status": "IN_PROGRESS",
     "memberRoles": [
-        {"userName": "phucn", "role": "MANAGER"},
+        {"userName": "phucnh", "role": "MANAGER"},
         {"userName": "andrew", "role": "MEMBER"}
     ]
 }

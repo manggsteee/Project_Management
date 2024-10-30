@@ -5,7 +5,6 @@ import lombok.*;
 import project.management.model.attachment.ProjectAttachment;
 import project.management.model.comment.ProjectComment;
 import project.management.project_enum.ProjectStatus;
-import project.management.service.AttachmentService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.List;
 @Entity
 @ToString
 @Table(name = "project")
-public class Project {
+public class Project{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

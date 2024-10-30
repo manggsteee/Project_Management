@@ -1,4 +1,4 @@
-package project.management.request;
+package project.management.dto.request;
 
 import lombok.Data;
 import project.management.project_enum.UserEnum;

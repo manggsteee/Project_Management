@@ -1,9 +1,11 @@
 package project.management.model.comment;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import project.management.model.User;
 
 import java.time.LocalDateTime;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Comment {
@@ -27,10 +31,5 @@ public abstract class Comment {
     @PrePersist
     public void setSendingTime() {
         this.sendingTime = LocalDateTime.now();
-    }
-
-    public Comment(String comment, User user) {
-        this.comment = comment;
-        this.user = user;
     }
 }

@@ -8,10 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import project.management.model.Project;
 import project.management.model.Task;
 import project.management.model.Work;
-import project.management.model.attachment.Attachment;
-import project.management.model.attachment.ProjectAttachment;
-import project.management.model.attachment.TaskAttachment;
-import project.management.model.attachment.WorkAttachment;
+import project.management.model.attachment.*;
+import project.management.project_enum.ProjectType;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -31,9 +29,9 @@ public class AttachmentService {
     @Value("${file.upload-dir}")
     private String folderDirection;
 
-    public <T, K extends Attachment> List<K> addAttachments(List<MultipartFile> files, Long id, String type, T attachable) {
+    public <T, K extends Attachment> List<K> addAttachments(List<MultipartFile> files, Long id, ProjectType type, T attachable) {
         List<K> attachments = new ArrayList<>();
-        Path directoryPath = Paths.get(folderDirection, type, String.valueOf(id));
+        Path directoryPath = Paths.get(folderDirection, type.toString(), String.valueOf(id));
         try {
             if (!Files.exists(directoryPath)) {
                 Files.createDirectories(directoryPath);
@@ -49,7 +47,7 @@ public class AttachmentService {
                     deleteAttachment(oldFile);
                 }
             }
-            if(files != null) {
+            if (files != null) {
                 for (MultipartFile file : files) {
                     Path filePath = directoryPath.resolve(Objects
                             .requireNonNull(file.getOriginalFilename()));
@@ -65,21 +63,27 @@ public class AttachmentService {
     }
 
     @SuppressWarnings("unchecked")
-    private <T, K extends Attachment> K getAttachment(MultipartFile file, String type, String folderDirection, T attachable) {
+    private <T, K extends Attachment> K getAttachment(MultipartFile file, ProjectType type, String folderDirection, T attachable) {
         return switch (type) {
-            case "project" -> (K) ProjectAttachment.builder()
+            case project -> (K) ProjectAttachment.builder()
                     .filename(file.getOriginalFilename())
                     .contentType(file.getContentType())
                     .filePath(folderDirection)
                     .project((Project) attachable)
                     .build();
-            case "task" -> (K) TaskAttachment.builder()
+            case task -> (K) TaskAttachment.builder()
                     .filename(file.getOriginalFilename())
                     .contentType(file.getContentType())
                     .filePath(folderDirection)
                     .task((Task) attachable)
                     .build();
-            case "work" -> (K) WorkAttachment.builder()
+            case work -> (K) WorkAttachment.builder()
+                    .filename(file.getOriginalFilename())
+                    .contentType(file.getContentType())
+                    .filePath(folderDirection)
+                    .work((Work) attachable)
+                    .build();
+            case work_submit -> (K) WorkSubmitAttachment.builder()
                     .filename(file.getOriginalFilename())
                     .contentType(file.getContentType())
                     .filePath(folderDirection)
@@ -104,9 +108,9 @@ public class AttachmentService {
 
     public void deleteFolder(Path path) {
         try {
-            if(Files.exists(path) && Files.isDirectory(path)) {
-                try(Stream<Path> stream = Files.walk(path)) {
-                        stream.sorted(Comparator.reverseOrder())
+            if (Files.exists(path) && Files.isDirectory(path)) {
+                try (Stream<Path> stream = Files.walk(path)) {
+                    stream.sorted(Comparator.reverseOrder())
                             .forEach(this::deleteAttachment);
                 }
                 Files.delete(path);

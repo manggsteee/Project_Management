@@ -1,4 +1,4 @@
-package project.management.dto;
+package project.management.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,13 +11,14 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Data
-public class WorkDTO {
+public class TaskDTO {
     private Long id;
     private String title;
     private String description;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private ProjectPriority priority;
-    private List<AttachmentDTO> workAttachments;
-    private String member;
+    private List<AttachmentDTO> taskAttachments;
+    private List<String> members;
+    private List<String> noneAddedMembers;
 }

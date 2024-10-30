@@ -1,8 +1,8 @@
 package project.management.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import project.management.dto.TaskDTO;
-import project.management.request.TaskRequest;
+import project.management.dto.response.TaskDTO;
+import project.management.dto.request.TaskRequest;
 
 import java.util.List;
 
@@ -15,4 +15,6 @@ public interface TaskServiceInterface {
     TaskDTO updateTask(Long taskId, TaskRequest updateTaskRequest, List<MultipartFile> files);
 
     void deleteTask(Long taskId);
+
+    //List<TaskDTO> getTasksByProjectId(Long projectId);
 }

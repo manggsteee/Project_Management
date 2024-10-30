@@ -4,17 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import project.management.dto.AttachmentDTO;
-import project.management.dto.TaskDTO;
-import project.management.exception.ResourceNotFoundException;
+import project.management.dto.response.AttachmentDTO;
+import project.management.dto.response.TaskDTO;
+import project.management.exception.ApplicationException;
 import project.management.model.Project;
 import project.management.model.Task;
 import project.management.model.User;
 import project.management.model.attachment.TaskAttachment;
+import project.management.project_enum.ExceptionEnum;
+import project.management.project_enum.ProjectType;
 import project.management.repository.ProjectRepository;
 import project.management.repository.TaskRepository;
 import project.management.repository.UserRepository;
-import project.management.request.TaskRequest;
+import project.management.dto.request.TaskRequest;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,11 +52,11 @@ public class TaskService implements TaskServiceInterface {
                         .build())
         ).orElseThrow(() -> {
                     log.error("Project with id {} can't be found", projectID);
-                    return new ResourceNotFoundException("Project not found");
+                    return new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND);
                 }
         );
         log.info("Task created with id {}", task.getId());
-        task.setTaskAttachments(attachmentService.addAttachments(files, task.getId(), "task", task));
+        task.setTaskAttachments(attachmentService.addAttachments(files, task.getId(), ProjectType.task, task));
         taskRepository.save(task);
         log.info("Attachments had saved into Task with id {}", task.getId());
         return getTaskDTO(task, getNotAddedMembers(request.getUserNames(), task));
@@ -71,7 +73,7 @@ public class TaskService implements TaskServiceInterface {
                     foundTask.setEndDate(updateTaskRequest.getEndDate());
                     foundTask.setPriority(updateTaskRequest.getPriority());
                     List<TaskAttachment> newTaskAttachments = attachmentService.addAttachments(
-                            files, foundTask.getId(), "task", foundTask);
+                            files, foundTask.getId(), ProjectType.task, foundTask);
                     List<TaskAttachment> existingAttachments = foundTask.getTaskAttachments();
                     existingAttachments.clear();
                     existingAttachments.addAll(newTaskAttachments);
@@ -82,7 +84,7 @@ public class TaskService implements TaskServiceInterface {
                     existingMembers.addAll(newMembers);
                     return taskRepository.save(foundTask);
                 })
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+                .orElseThrow(() -> new ApplicationException(ExceptionEnum.TASK_NOT_FOUND));
         return getTaskDTO(task, getNotAddedMembers(updateTaskRequest.getUserNames(), task));
     }
 
@@ -112,7 +114,7 @@ public class TaskService implements TaskServiceInterface {
                     });
                 },
                 () -> {
-                    throw new ResourceNotFoundException("Task not found");
+                    throw new ApplicationException(ExceptionEnum.TASK_NOT_FOUND);
                 });
     }
 
