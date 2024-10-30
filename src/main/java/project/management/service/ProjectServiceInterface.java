@@ -1,10 +1,10 @@
 package project.management.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import project.management.dto.ProjectDTO;
+import project.management.dto.response.ProjectDTO;
 import project.management.model.attachment.ProjectAttachment;
 import project.management.project_enum.ProjectStatus;
-import project.management.request.ProjectRequest;
+import project.management.dto.request.ProjectRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;

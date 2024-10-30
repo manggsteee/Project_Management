@@ -2,15 +2,14 @@ package project.management.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import project.management.exception.DeniedUserException;
-import project.management.exception.ResourceNotFoundException;
-import project.management.exception.WrongTypeException;
+import project.management.exception.ApplicationException;
 import project.management.model.MemberRole;
 import project.management.model.Project;
 import project.management.model.User;
 import project.management.model.comment.ProjectComment;
 import project.management.model.comment.TaskComment;
 import project.management.model.comment.WorkComment;
+import project.management.project_enum.ExceptionEnum;
 import project.management.project_enum.ProjectType;
 import project.management.repository.ProjectRepository;
 import project.management.repository.TaskRepository;
@@ -18,7 +17,7 @@ import project.management.repository.WorkRepository;
 import project.management.repository.comment.ProjectCommentRepository;
 import project.management.repository.comment.TaskCommentRepository;
 import project.management.repository.comment.WorkCommentRepository;
-import project.management.request.CommentRequest;
+import project.management.dto.request.CommentRequest;
 
 import java.util.Optional;
 
@@ -33,7 +32,7 @@ public class CommentService implements CommentServiceInterface {
     private final WorkRepository workRepository;
 
     @Override
-    public void addComment(Long id, CommentRequest comment) throws WrongTypeException{
+    public void addComment(Long id, CommentRequest comment) throws ApplicationException{
         switch (comment.getType()) {
             case project -> projectRepository.findById(id).ifPresentOrElse(project -> {
                         ProjectComment projectComment = ProjectComment.builder()
@@ -44,7 +43,7 @@ public class CommentService implements CommentServiceInterface {
                         projectCommentRepository.save(projectComment);
                     },
                     () -> {
-                        throw new ResourceNotFoundException("Project not found");
+                        throw new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND);
                     }
             );
             case task -> taskRepository.findById(id).ifPresentOrElse(task -> {
@@ -56,7 +55,7 @@ public class CommentService implements CommentServiceInterface {
                         taskCommentRepository.save(taskComment);
                     },
                     () -> {
-                        throw new ResourceNotFoundException("Task not found");
+                        throw new ApplicationException(ExceptionEnum.TASK_NOT_FOUND);
                     });
             case work -> workRepository.findById(id).ifPresentOrElse(work -> {
                         WorkComment workComment = WorkComment.builder()
@@ -67,9 +66,9 @@ public class CommentService implements CommentServiceInterface {
                         workCommentRepository.save(workComment);
                     },
                     () -> {
-                        throw new ResourceNotFoundException("Work not found");
+                        throw new ApplicationException(ExceptionEnum.WORK_NOT_FOUND);
                     });
-            default -> throw new WrongTypeException("Wrong comment type");
+            default -> throw new ApplicationException(ExceptionEnum.WRONG_COMMENT_TYPE);
         }
 
     }
@@ -89,9 +88,7 @@ public class CommentService implements CommentServiceInterface {
                         memberRoles.stream().filter(memberRole ->
                                         memberRole.getUser().getUsername().equals(sender)
                                 ).findFirst().map(MemberRole::getUser)
-                                .orElseThrow(() -> new DeniedUserException("User with username: "
-                                        + sender + " doesn't have permission to comment to this project")))
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Project doesn't have any member yet"));
+                                .orElseThrow(() -> new ApplicationException(ExceptionEnum.DENIED_USER_COMMENT_PROJECT)))
+                .orElseThrow(() -> new ApplicationException(ExceptionEnum.USER_NOT_FOUND));
     }
 }

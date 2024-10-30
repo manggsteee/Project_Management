@@ -4,21 +4,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import project.management.dto.AttachmentDTO;
-import project.management.dto.MemberRoleDTO;
-import project.management.dto.ProjectDTO;
-import project.management.exception.DeniedUserException;
-import project.management.exception.ResourceNotFoundException;
+import project.management.dto.response.AttachmentDTO;
+import project.management.dto.response.MemberRoleDTO;
+import project.management.dto.response.ProjectDTO;
+import project.management.exception.ApplicationException;
 import project.management.model.MemberRole;
 import project.management.model.Project;
 import project.management.model.attachment.ProjectAttachment;
+import project.management.project_enum.ExceptionEnum;
 import project.management.project_enum.ProjectStatus;
 import project.management.project_enum.ProjectType;
 import project.management.repository.ProjectRepository;
 import project.management.repository.UserRepository;
 import project.management.repository.attachment.ProjectAttachmentRepository;
-import project.management.request.MemberRolesRequest;
-import project.management.request.ProjectRequest;
+import project.management.dto.request.MemberRolesRequest;
+import project.management.dto.request.ProjectRequest;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -75,7 +75,7 @@ public class ProjectService implements ProjectServiceInterface {
             existingRoles.clear();
             existingRoles.addAll(newRoles);
             return projectRepository.save(foundProject);
-        }).orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        }).orElseThrow(() -> new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND));
 
         return getProjectDTO(project);
     }
@@ -118,19 +118,16 @@ public class ProjectService implements ProjectServiceInterface {
                             });
                         },
                         () -> {
-                            throw new ResourceNotFoundException("Project not found");
+                            throw new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND);
                         });
     }
 
     @Override
     public ProjectDTO getProjectById(String userName, Long projectId) {
         Project project = projectRepository.findById(projectId).
-                orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+                orElseThrow(() -> new ApplicationException(ExceptionEnum.PROJECT_NOT_FOUND));
         if (!checkExistUser(userName, project))
-            throw new DeniedUserException(
-                    "Project with id " + projectId +
-                            " exists but don't have any User with username: "
-                            + userName);
+            throw new ApplicationException(ExceptionEnum.DENIED_USER_FOUND_PROJECT);
         return getProjectDTO(project);
     }
 
@@ -138,14 +135,11 @@ public class ProjectService implements ProjectServiceInterface {
     public List<ProjectDTO> getProjectsByName(String userName, String projectName) {
         List<Project> projects = getProjectsIfUserExists(userName,
                 projectRepository.getProjectByName(projectName)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Can't found any project with name: " +
-                                        projectName)));
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
         if (projects.isEmpty())
-            throw new DeniedUserException(
-                    "User with username: " + userName +
-                            " doesn't in any Project with name: " + projectName
-            );
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
         return getProjectDTOs(projects);
     }
 
@@ -153,15 +147,11 @@ public class ProjectService implements ProjectServiceInterface {
     public List<ProjectDTO> getProjectsByStartDate(String userName, LocalDateTime startDate) {
         List<Project> projects = getProjectsIfUserExists(userName,
                 projectRepository.getProjectByStartDate(startDate)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Can't found any project with Start Date: " +
-                                        startDate)));
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
         if (projects.isEmpty())
-            throw new DeniedUserException(
-                    "User with username: " + userName +
-                            " doesn't in any Project with Start Date: "
-                            + startDate
-            );
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
         return getProjectDTOs(projects);
     }
 
@@ -169,15 +159,11 @@ public class ProjectService implements ProjectServiceInterface {
     public List<ProjectDTO> getProjectsByEndDate(String userName, LocalDateTime endDate) {
         List<Project> projects = getProjectsIfUserExists(userName,
                 projectRepository.getProjectByEndDate(endDate)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Can't found any project with endDate: "
-                                        + endDate)));
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
         if (projects.isEmpty())
-            throw new DeniedUserException(
-                    "User with username: " + userName +
-                            " doesn't in any Project with End Date: "
-                            + endDate
-            );
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
         return getProjectDTOs(projects);
     }
 
@@ -185,14 +171,11 @@ public class ProjectService implements ProjectServiceInterface {
     public List<ProjectDTO> getProjectsByStatus(String userName, ProjectStatus status) {
         List<Project> projects = getProjectsIfUserExists(userName,
                 projectRepository.getProjectByStatus(status)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Can't found any project with status: " + status)));
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
         if (projects.isEmpty())
-            throw new DeniedUserException(
-                    "User with username: " + userName +
-                            " doesn't in any Project with Status: "
-                            + status
-            );
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
         return getProjectDTOs(projects);
     }
 
@@ -200,15 +183,11 @@ public class ProjectService implements ProjectServiceInterface {
     public List<ProjectDTO> getProjectsByCreatedDate(String userName, LocalDateTime createdDate) {
         List<Project> projects = getProjectsIfUserExists(userName,
                 projectRepository.getProjectByCreatedAt(createdDate)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Can't found any project with created Date: "
-                                        + createdDate)));
+                        .orElseThrow(() -> new ApplicationException(
+                                ExceptionEnum.PROJECT_NOT_FOUND)));
         if (projects.isEmpty())
-            throw new DeniedUserException(
-                    "User with username: " + userName +
-                            " doesn't in any Project with Created Date: "
-                            + createdDate
-            );
+            throw new ApplicationException(
+                    ExceptionEnum.PROJECT_NOT_FOUND);
         return getProjectDTOs(projects);
     }
 
@@ -219,13 +198,13 @@ public class ProjectService implements ProjectServiceInterface {
                         .map(projectAttachment ->
                                 "http://localhost:8080/project_management/v1/project/attachment/download/" + projectAttachment.getId()
                                 ).toList())
-                .orElseThrow(() -> new ResourceNotFoundException("Files not found"));
+                .orElseThrow(() -> new ApplicationException(ExceptionEnum.FILE_NOT_FOUND));
     }
 
     @Override
     public ProjectAttachment getFilePath(Long attachmentId) {
         return projectAttachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+                .orElseThrow(() -> new ApplicationException(ExceptionEnum.FILE_NOT_FOUND));
     }
 
     private List<MemberRole> getMemberRoles(Long projectId, List<MemberRolesRequest> request) {

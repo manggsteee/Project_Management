@@ -1,4 +1,4 @@
-package project.management.request;
+package project.management.dto.request;
 
 import lombok.Builder;
 import lombok.Data;
