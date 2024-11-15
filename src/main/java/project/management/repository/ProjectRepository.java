@@ -1,23 +1,23 @@
 package project.management.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import project.management.model.Project;
 import project.management.project_enum.ProjectStatus;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-    Optional<List<Project>> getProjectByName(String projectName);
+    Page<Project> findByName(String projectName, Pageable pageable);
 
-    Optional<List<Project>> getProjectByStartDate(LocalDateTime startDate);
+    Page<Project> findByStartDate(LocalDateTime startDate, Pageable pageable);
 
-    Optional<List<Project>> getProjectByEndDate(LocalDateTime endDate);
+    Page<Project> findByEndDate(LocalDateTime endDate, Pageable pageable);
 
-    Optional<List<Project>> getProjectByStatus(ProjectStatus status);
+    Page<Project> findByStatus(ProjectStatus status, Pageable pageable);
 
-    Optional<List<Project>> getProjectByCreatedAt(LocalDateTime createdDate);
+    Page<Project> findByCreatedAt(LocalDateTime createdDate, Pageable pageable);
 }
