@@ -24,6 +24,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
     implementation("org.springframework.security:spring-security-oauth2-client")
     implementation("io.github.cdimascio:dotenv-java:3.0.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.1")
     testImplementation("org.mockito:mockito-core:5.14.2")
     testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
     testImplementation(platform("org.junit:junit-bom:5.11.3"))
