@@ -19,6 +19,8 @@ public class ProjectManagement {
         System.setProperty("CLIENT_SECRET", dotenv.get("CLIENT_SECRET"));
         System.setProperty("UPLOAD_DIR", dotenv.get("UPLOAD_DIR"));
         System.setProperty("SECRET_KEY", dotenv.get("SECRET_KEY"));
+        System.setProperty("DOCKER_VOLUME", dotenv.get("DOCKER_VOLUME"));
+        System.setProperty("DOCKER_VOLUME_FILE", dotenv.get("DOCKER_VOLUME_FILE"));
         SpringApplication.run(ProjectManagement.class, args);
     }
 
